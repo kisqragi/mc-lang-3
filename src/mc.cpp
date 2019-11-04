@@ -67,6 +67,8 @@ int main(int argc, char *argv[]) {
     // TODO 3.1: '<'を実装してみよう
     // BinopPrecedenceに'<'を登録して下さい。
     BinopPrecedence['<'] = 10;
+    BinopPrecedence['>'] = 10;
+    BinopPrecedence['='] = 5;
     BinopPrecedence['+'] = 20;
     BinopPrecedence['-'] = 20;
     BinopPrecedence['*'] = 40;
