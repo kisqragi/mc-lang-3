@@ -28,7 +28,7 @@ class Lexer {
         int gettok() {
 
             static int lastChar = getNextChar(iFile);
-            static int tmpChar = tok_eof;
+            int tmpChar = tok_eof;
             
             // スペースをスキップ
             while (isspace(lastChar))
@@ -134,7 +134,7 @@ class Lexer {
             int thisChar = lastChar;
             if (tmpChar != tok_eof) {
                 lastChar = tmpChar;
-                tmpChar = tok_eof;
+                //tmpChar = tok_eof;
             } else {
                 lastChar = getNextChar(iFile);
             }
