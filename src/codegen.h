@@ -96,6 +96,12 @@ Value *BinaryAST::codegen() {
         case '=':
             L = Builder.CreateICmp(llvm::CmpInst::ICMP_EQ, L, R, "eqtmp");
             return Builder.CreateIntCast(L, Builder.getInt64Ty(), true, "cast_i1_to_i64");
+        case tok_sle:
+            L = Builder.CreateICmp(llvm::CmpInst::ICMP_SLE, L, R, "sletmp");
+            return Builder.CreateIntCast(L, Builder.getInt64Ty(), true, "cast_i1_to_i64");
+        case tok_sge:
+            L = Builder.CreateICmp(llvm::CmpInst::ICMP_SGE, L, R, "sgetmp");
+            return Builder.CreateIntCast(L, Builder.getInt64Ty(), true, "cast_i1_to_i64");
         default:
             return LogErrorV("invalid binary operator");
     }

@@ -15,7 +15,9 @@ enum Token {
     tok_number = -4,
     tok_if = -5,
     tok_then = -6,
-    tok_else = -7
+    tok_else = -7,
+    tok_sle = -8,
+    tok_sge = -9,
 };
 
 class Lexer {
@@ -24,8 +26,10 @@ class Lexer {
         // を返し、トークンが識別子だった場合はidentifierStrにその文字をセットした上でtok_identifierを返す。
         // '+'や他のunknown tokenだった場合はそのascii codeを返す。
         int gettok() {
-            static int lastChar = getNextChar(iFile);
 
+            static int lastChar = getNextChar(iFile);
+            static int tmpChar = tok_eof;
+            
             // スペースをスキップ
             while (isspace(lastChar))
                 lastChar = getNextChar(iFile);
@@ -39,6 +43,8 @@ class Lexer {
                 identifierStr = lastChar;
                 while (isalnum((lastChar = getNextChar(iFile))))
                     identifierStr += lastChar;
+                    
+
 
                 if (identifierStr == "def")
                     return tok_def;
@@ -101,9 +107,37 @@ class Lexer {
             if (iFile.eof())
                 return tok_eof;
 
+            if (lastChar == '>' || lastChar == '<') {
+                tmpChar = lastChar;
+                if (lastChar == '>') {
+                    lastChar = getNextChar(iFile);
+                    if (lastChar == '=') {
+                        tmpChar = tok_eof;
+                        lastChar = getNextChar(iFile);
+                        return tok_sge;
+                    }
+                }
+                if (lastChar == '<') {
+                    lastChar = getNextChar(iFile);
+                    if (lastChar == '=') {
+                        tmpChar = tok_eof;
+                        lastChar = getNextChar(iFile);
+                        return tok_sle;
+                    }
+                }
+                int tmp = lastChar;
+                lastChar = tmpChar;
+                tmpChar = tmp;
+            }
+
             // tok_numberでもtok_eofでもなければそのcharのasciiを返す
             int thisChar = lastChar;
-            lastChar = getNextChar(iFile);
+            if (tmpChar != tok_eof) {
+                lastChar = tmpChar;
+                tmpChar = tok_eof;
+            } else {
+                lastChar = getNextChar(iFile);
+            }
             return thisChar;
         }
 
@@ -117,7 +151,7 @@ class Lexer {
 
         void initStream(std::string fileName) { iFile.open(fileName); }
 
-            private:
+    private:
         std::ifstream iFile;
         uint64_t numVal;
         // tok_identifierなら文字を入れる
@@ -129,4 +163,5 @@ class Lexer {
 
             return c;
         }
-        };
+        int lastChar;
+};

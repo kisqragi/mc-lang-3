@@ -1,2 +1,2 @@
 def myfunc(x y)
-    x < y;
+    x = y;

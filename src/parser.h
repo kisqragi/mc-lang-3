@@ -110,6 +110,7 @@ namespace {
 // 格納されている。
 // getNextTokenにより次のトークンを読み、Curtokを更新する。
 static int CurTok;
+//static int getNextToken() { return CurTok = lexer.gettok(); }
 static int getNextToken() { return CurTok = lexer.gettok(); }
 
 // 二項演算子の結合子をmc.cppで定義している。
@@ -118,8 +119,9 @@ static std::map<char, int> BinopPrecedence;
 // GetTokPrecedence - 二項演算子の結合度を取得
 // もし現在のトークンが二項演算子ならその結合度を返し、そうでないなら-1を返す。
 static int GetTokPrecedence() {
-    if (!isascii(CurTok))
+    if (!isascii(CurTok) && CurTok != tok_sle && CurTok != tok_sge)
         return -1;
+
 
     int tokprec = BinopPrecedence[CurTok];
     if (tokprec <= 0)
@@ -286,6 +288,8 @@ static std::unique_ptr<ExprAST> ParseBinOpRHS(int CallerPrec,
         // '2*3'がパースされた後に返る。
         if (tokprec < CallerPrec)
             return LHS;
+
+
 
         // 3. 二項演算子をセットする。e.g. int BinOp = CurTok;
         int BinOp = CurTok;
