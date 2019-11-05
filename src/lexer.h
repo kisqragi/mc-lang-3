@@ -163,5 +163,4 @@ class Lexer {
 
             return c;
         }
-        int lastChar;
 };
