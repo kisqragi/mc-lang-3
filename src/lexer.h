@@ -134,7 +134,6 @@ class Lexer {
             int thisChar = lastChar;
             if (tmpChar != tok_eof) {
                 lastChar = tmpChar;
-                //tmpChar = tok_eof;
             } else {
                 lastChar = getNextChar(iFile);
             }
@@ -142,8 +141,8 @@ class Lexer {
         }
 
         // 数字を格納するnumValのgetter, setter
-        uint64_t getNumVal() { return numVal; }
-        void setnumVal(uint64_t numval) { numVal = numval; }
+        int getNumVal() { return numVal; }
+        void setnumVal(int numval) { numVal = numval; }
 
         // 識別子を格納するIdentifierStrのgetter, setter
         std::string getIdentifier() { return identifierStr; }

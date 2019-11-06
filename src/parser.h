@@ -19,10 +19,10 @@ namespace {
     // NumberAST - `5`や`2`等の数値リテラルを表すクラス
     class NumberAST : public ExprAST {
         // 実際に数値の値を保持する変数
-        uint64_t Val;
+        int Val;
 
         public:
-        NumberAST(uint64_t Val) : Val(Val) {}
+        NumberAST(int Val) : Val(Val) {}
         Value *codegen() override;
     };
 
@@ -151,6 +151,21 @@ static std::unique_ptr<ExprAST> ParseNumberExpr() {
     return std::move(Result);
 }
 
+// 負数をパースする
+static std::unique_ptr<ExprAST> ParseNegNumberExpr() {
+    getNextToken();
+    if (CurTok != tok_number) {
+        return LogError("expected number after '-'");
+    } else {
+        // NumberASTのValにlexerからnumValを読んできて、セットする。
+        auto Result = llvm::make_unique<NumberAST>(-lexer.getNumVal());
+        getNextToken(); // トークンを一個進めて、returnする。
+        return std::move(Result);
+    }
+}
+
+
+
 // TODO 1.5: 括弧を実装してみよう
 // 括弧は`'(' ExprAST ')'`の形で表されます。最初の'('を読んだ後、次のトークンは
 // ExprAST(NumberAST or BinaryAST)のはずなのでそれをパースし、最後に')'で有ることを
@@ -268,6 +283,8 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
             return ParseNumberExpr();
         case '(':
             return ParseParenExpr();
+        case '-':
+            return ParseNegNumberExpr();
         case tok_if:
             return ParseIfExpr();
     }
