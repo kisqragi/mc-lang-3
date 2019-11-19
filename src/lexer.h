@@ -18,6 +18,7 @@ enum Token {
     tok_else = -7,
     tok_sle = -8,
     tok_sge = -9,
+    tok_ternary = -10,
 };
 
 class Lexer {

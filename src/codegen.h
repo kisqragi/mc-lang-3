@@ -227,6 +227,73 @@ Value *IfExprAST::codegen() {
     return PN;
 }
 
+Value *TernaryExprAST::codegen() {
+    // if x < 5 then x + 3 else x - 5;
+    // というコードが入力だと考える。
+    // Cond->codegen()によって"x < 5"のcondition部分がcodegenされ、その返り値(int)が
+    // CondVに格納される。
+    Value *CondV = Cond->codegen();
+    if (!CondV)
+        return nullptr;
+
+    // CondVはint64でtrueなら0以外、falseなら0が入っているため、CreateICmpNEを用いて
+    // CondVが0(false)とnot-equalかどうか判定し、CondVをbool型にする。
+    CondV = Builder.CreateICmpNE(
+            CondV, ConstantInt::get(Context, APInt(64, 0)), "ternarycond");
+    // if文を呼んでいる関数の名前
+    Function *ParentFunc = Builder.GetInsertBlock()->getParent();
+
+    // "thenだった場合"と"elseだった場合"のブロックを作り、ラベルを付ける。
+    // "ifcont"はif文が"then"と"else"の処理の後、二つのコントロールフローを
+    // マージするブロック。
+    BasicBlock *Value1BB=
+        BasicBlock::Create(Context, "value1", ParentFunc);
+    BasicBlock *Value2BB= BasicBlock::Create(Context, "value2");
+    BasicBlock *MergeBB = BasicBlock::Create(Context, "ternarycont");
+    // condition, trueだった場合のブロック、falseだった場合のブロックを登録する。
+    // https://llvm.org/doxygen/classllvm_1_1IRBuilder.html#a3393497feaca1880ab3168ee3db1d7a4
+    Builder.CreateCondBr(CondV, Value1BB, Value2BB);
+
+    // "then"のブロックを作り、その内容(expression)をcodegenする。
+    Builder.SetInsertPoint(Value1BB);
+    Value *Value1V = Value1->codegen();
+    if (!Value1V)
+        return nullptr;
+    // "then"のブロックから出る時は"ifcont"ブロックに飛ぶ。
+    Builder.CreateBr(MergeBB);
+    // ThenBBをアップデートする。
+    Value1BB = Builder.GetInsertBlock();
+
+    // TODO 3.4: "else"ブロックのcodegenを実装しよう
+    // "then"ブロックを参考に、"else"ブロックのcodegenを実装して下さい。
+    // 注意: 20行下のコメントアウトを外して下さい。
+    ParentFunc->getBasicBlockList().push_back(Value2BB);
+    Builder.SetInsertPoint(Value2BB);
+    Value *Value2V = Value2->codegen();
+    if (!Value2V)
+        return nullptr;
+    Builder.CreateBr(MergeBB);
+    Value2BB = Builder.GetInsertBlock();
+
+    // "ifcont"ブロックのcodegen
+    ParentFunc->getBasicBlockList().push_back(MergeBB);
+    Builder.SetInsertPoint(MergeBB);
+    // https://llvm.org/docs/LangRef.html#phi-instruction
+    // PHINodeは、"then"ブロックのValueか"else"ブロックのValue
+    // どちらをifブロック全体の返り値にするかを実行時に選択します。
+    // もちろん、"then"ブロックに入るconditionなら前者が選ばれ、そうでなければ後者な訳です。
+    // LLVM IRはSSAという"全ての変数が一度だけassignされる"規約があるため、
+    // 値を上書きすることが出来ません。従って、このように実行時にコントロールフローの
+    // 値を選択する機能が必要です。
+    PHINode *PN =
+        Builder.CreatePHI(Type::getInt64Ty(Context), 2, "ternarytmp");
+
+    PN->addIncoming(Value1V, Value1BB);
+    // TODO 3.4:を実装したらコメントアウトを外して下さい。
+    PN->addIncoming(Value2V, Value2BB);
+    return PN;
+}
+
 //===----------------------------------------------------------------------===//
 // MC コンパイラエントリーポイント
 // mc.cppでMainLoop()が呼ばれます。MainLoopは各top level expressionに対して

@@ -98,6 +98,18 @@ namespace {
 
         Value *codegen() override;
     };
+
+    class TernaryExprAST : public ExprAST {
+        std::unique_ptr<ExprAST> Cond, Value1, Value2;
+
+        public:
+        TernaryExprAST(std::unique_ptr<ExprAST> Cond, std::unique_ptr<ExprAST> Value1,
+                std::unique_ptr<ExprAST> Value2)
+            : Cond(std::move(Cond)), Value1(std::move(Value1)), Value2(std::move(Value2)) {}
+
+        Value *codegen() override;
+    };
+
 } // end anonymous namespace
 
 //===----------------------------------------------------------------------===//
@@ -272,6 +284,30 @@ static std::unique_ptr<ExprAST> ParseIfExpr() {
     return llvm::make_unique<IfExprAST>(std::move(Cond), std::move(Then), std::move(Else));
 }
 
+static std::unique_ptr<ExprAST> ParseTernaryExpr(std::unique_ptr<ExprAST> Cond) {
+    // トークンを次に進めます(?を飛ばす)。
+    getNextToken();
+
+    // Value1(真)になる式を求める。  
+    auto Value1 = ParseExpression();
+
+    // Cond ? Valu1 : Value2 の式に満たしていなければエラー
+    if (CurTok != ':')
+        return LogError("Expected ':'");
+
+    // ":"を飛ばす
+    getNextToken();
+
+    // Value2(偽)の方の式を求める
+    auto Value2 = ParseExpression();
+
+    // トークンを進める
+    getNextToken();
+
+    // 7. TernaryExprASTを作り、returnします。
+    return llvm::make_unique<TernaryExprAST>(std::move(Cond), std::move(Value1), std::move(Value2));
+}
+
 // ParsePrimary - NumberASTか括弧をパースする関数
 static std::unique_ptr<ExprAST> ParsePrimary() {
     switch (CurTok) {
@@ -318,6 +354,12 @@ static std::unique_ptr<ExprAST> ParseBinOpRHS(int CallerPrec,
         auto RHS = ParsePrimary();
         if (!RHS)
             return nullptr;
+
+        if (CurTok == '?') {
+            auto Cond = llvm::make_unique<BinaryAST>(BinOp, std::move(LHS), std::move(RHS));
+            auto Result = ParseTernaryExpr(std::move(Cond)); 
+            return Result;
+        }
 
         // GetTokPrecedence()を呼んで、もし次のトークンも二項演算子だった場合を考える。
         // もし次の二項演算子の結合度が今の演算子の結合度よりも強かった場合、ParseBinOpRHSを再帰的に
