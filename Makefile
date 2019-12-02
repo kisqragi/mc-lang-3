@@ -1,5 +1,5 @@
 CXX = clang++
-CXXFLAGS = `llvm-config --cxxflags --ldflags --system-libs --libs all`
+CXXFLAGS = `/usr/local/Cellar/llvm/9.0.0_1/bin/llvm-config --cxxflags --ldflags --system-libs --libs all`
 
 .PHONY: mc
 

@@ -24,6 +24,15 @@ Value *NumberAST::codegen() {
     return ConstantInt::get(Context, APInt(64, Val, true));
 }
 
+Value *NegNumberAST::codegen() {
+    Value *L = LHS->codegen();
+    Value *R = RHS->codegen();
+    if (!L || !R)
+        return nullptr;
+
+    return Builder.CreateSub(L, R, "subtmp");
+}
+
 Value *LogErrorV(const char *str) {
     LogError(str);
     return nullptr;

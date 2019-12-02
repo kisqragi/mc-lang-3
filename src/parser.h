@@ -26,6 +26,17 @@ namespace {
         Value *codegen() override;
     };
 
+    class NegNumberAST : public ExprAST {
+        std::unique_ptr<ExprAST> LHS, RHS;
+
+        public:
+        NegNumberAST(std::unique_ptr<ExprAST> LHS,
+                std::unique_ptr<ExprAST> RHS)
+            : LHS(std::move(LHS)), RHS(std::move(RHS)) {}
+
+        Value *codegen() override;
+    };
+
     // BinaryAST - `+`や`*`等の二項演算子を表すクラス
     class BinaryAST : public ExprAST {
         char Op;
@@ -128,6 +139,8 @@ static int getNextToken() { return CurTok = lexer.gettok(); }
 // 二項演算子の結合子をmc.cppで定義している。
 static std::map<char, int> BinopPrecedence;
 
+static std::unique_ptr<ExprAST> ParsePrimary();
+
 // GetTokPrecedence - 二項演算子の結合度を取得
 // もし現在のトークンが二項演算子ならその結合度を返し、そうでないなら-1を返す。
 static int GetTokPrecedence() {
@@ -163,20 +176,12 @@ static std::unique_ptr<ExprAST> ParseNumberExpr() {
     return std::move(Result);
 }
 
-// 負数をパースする
 static std::unique_ptr<ExprAST> ParseNegNumberExpr() {
     getNextToken();
-    if (CurTok != tok_number) {
-        return LogError("expected number after '-'");
-    } else {
-        // NumberASTのValにlexerからnumValを読んできて、セットする。
-        auto Result = llvm::make_unique<NumberAST>(-lexer.getNumVal());
-        getNextToken(); // トークンを一個進めて、returnする。
-        return std::move(Result);
-    }
+    auto RHS = ParsePrimary();
+    auto LHS = llvm::make_unique<NumberAST>(0);
+    return llvm::make_unique<NegNumberAST>(std::move(LHS), std::move(RHS));
 }
-
-
 
 // TODO 1.5: 括弧を実装してみよう
 // 括弧は`'(' ExprAST ')'`の形で表されます。最初の'('を読んだ後、次のトークンは
@@ -325,6 +330,7 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
             return ParseIfExpr();
     }
 }
+
 
 // TODO 1.6: 二項演算のパーシングを実装してみよう
 // このパーサーの中で一番重要と言っても良い、二項演算子のパーシングを実装します。
