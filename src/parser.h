@@ -139,8 +139,6 @@ static int getNextToken() { return CurTok = lexer.gettok(); }
 // 二項演算子の結合子をmc.cppで定義している。
 static std::map<char, int> BinopPrecedence;
 
-static std::unique_ptr<ExprAST> ParsePrimary();
-
 // GetTokPrecedence - 二項演算子の結合度を取得
 // もし現在のトークンが二項演算子ならその結合度を返し、そうでないなら-1を返す。
 static int GetTokPrecedence() {
@@ -167,6 +165,7 @@ std::unique_ptr<PrototypeAST> LogErrorP(const char *Str) {
 
 // Forward declaration
 static std::unique_ptr<ExprAST> ParseExpression();
+static std::unique_ptr<ExprAST> ParsePrimary();
 
 // 数値リテラルをパースする関数。
 static std::unique_ptr<ExprAST> ParseNumberExpr() {
@@ -390,7 +389,7 @@ static std::unique_ptr<PrototypeAST> ParsePrototype() {
     if (CurTok != tok_identifier)
         return LogErrorP("Expected function name in prototype");
 
-    std::string FnName = lexer.getIdentifier();;
+    std::string FnName = lexer.getIdentifier();
     getNextToken();
 
     if (CurTok != '(')
@@ -401,6 +400,7 @@ static std::unique_ptr<PrototypeAST> ParsePrototype() {
         std::string curArg = lexer.getIdentifier();
         ArgNames.push_back(curArg);
     }
+
     if (CurTok != ')')
         return LogErrorP("Expected ')' in prototype");
 
@@ -418,6 +418,11 @@ static std::unique_ptr<FunctionAST> ParseDefinition() {
     if (auto E = ParseExpression())
         return llvm::make_unique<FunctionAST>(std::move(proto), std::move(E));
     return nullptr;
+}
+
+static std::unique_ptr<PrototypeAST> ParseExtern() {
+    getNextToken();
+    return ParsePrototype();
 }
 
 // ExprASTは1. 数値リテラル 2. '('から始まる演算 3. 二項演算子の三通りが考えられる為、

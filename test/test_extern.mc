@@ -1,5 +1,4 @@
-extern putchard(x)
+extern printd(x)
 
-def extern_test()
-    putchard(10)
-
+def test(x)
+    printd(x)

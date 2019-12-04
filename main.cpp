@@ -25,9 +25,8 @@ int main() {
     std::cout << "Call myfunc with (3, 2): " << myfunc(3, 2) << std::endl;
     */
 
-    std::cout << "Call test with (0): " << test(0) << std::endl;
-    std::cout << "Call test with (1): " << test(1) << std::endl;
-    std::cout << "Call test with (2): " << test(2) << std::endl;
+    // extern test
+    test(10);
 
     return 0;
 }

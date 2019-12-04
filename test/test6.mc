@@ -1,2 +1,2 @@
 def test(x)
-    -x
+    10 - -x
