@@ -20,6 +20,8 @@ enum Token {
     tok_sge = -9,
     tok_ternary = -10,
     tok_extern = -11,
+    tok_for = -12,
+    tok_in = -13,
 };
 
 class Lexer {
@@ -60,6 +62,10 @@ class Lexer {
                     return tok_else;
                 if (identifierStr == "extern")
                     return tok_extern;
+                if (identifierStr == "for")
+                    return tok_for;
+                if (identifierStr == "in")
+                    return tok_in;
 
                 return tok_identifier;
             }

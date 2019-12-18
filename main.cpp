@@ -5,6 +5,7 @@ extern "C" {
     int f(int);
     int myfunc(int, int);
     int test(int);
+    int testloop();
 }
 
 int main() {
@@ -26,7 +27,9 @@ int main() {
     */
 
     // extern test
-    test(10);
+    //test(10);
+
+    testloop();
 
     return 0;
 }

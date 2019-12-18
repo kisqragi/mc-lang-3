@@ -121,6 +121,17 @@ namespace {
         Value *codegen() override;
     };
 
+    class ForExprAST : public ExprAST {
+        std::string VarName;
+        std::unique_ptr<ExprAST> Start, End, Step, Body;
+    public:
+        ForExprAST(const std::string &varname, std::unique_ptr<ExprAST> start, std::unique_ptr<ExprAST> end,
+                    std::unique_ptr<ExprAST> step, std::unique_ptr<ExprAST> body)
+            : VarName(varname), Start(std::move(start)), End(std::move(end)), Step(std::move(step)), Body(std::move(body)) {}
+
+        Value *codegen() override;
+    };
+
 } // end anonymous namespace
 
 //===----------------------------------------------------------------------===//
@@ -312,6 +323,49 @@ static std::unique_ptr<ExprAST> ParseTernaryExpr(std::unique_ptr<ExprAST> Cond) 
     return llvm::make_unique<TernaryExprAST>(std::move(Cond), std::move(Value1), std::move(Value2));
 }
 
+static std::unique_ptr<ExprAST> ParseForExpr() {
+    getNextToken();
+
+    if (CurTok != tok_identifier) {
+        return LogError("expected identifier after for");
+    }
+
+    std::string IdName = lexer.getIdentifier();
+    getNextToken();
+
+    if (CurTok != '=')
+        return LogError("expected '=' after for");
+    getNextToken();
+
+    auto Start = ParseExpression();
+    if (Start == 0) return 0;
+
+    if (CurTok != ',')
+        return LogError("expected ',' after for start value");
+    getNextToken();
+        
+    auto End = ParseExpression();
+    if (End == 0) return 0;
+
+    std::unique_ptr<ExprAST> Step = 0;
+    if (CurTok == ',') {
+        getNextToken();
+        Step = std::move(ParseExpression());
+        if (Step == 0) return 0;
+    }
+
+    if (CurTok != tok_in)
+        return LogError("expected 'in' after for");
+    getNextToken();
+
+    auto Body = ParseExpression();
+    if (Body == 0) return 0;
+
+    return llvm::make_unique<ForExprAST>(IdName, std::move(Start), std::move(End), std::move(Step), std::move(Body));
+}
+        
+
+
 // ParsePrimary - NumberASTか括弧をパースする関数
 static std::unique_ptr<ExprAST> ParsePrimary() {
     switch (CurTok) {
@@ -327,6 +381,8 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
             return ParseNegNumberExpr();
         case tok_if:
             return ParseIfExpr();
+        case tok_for:
+            return ParseForExpr();
     }
 }
 

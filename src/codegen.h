@@ -304,6 +304,62 @@ Value *TernaryExprAST::codegen() {
     return PN;
 }
 
+Value *ForExprAST::codegen() {
+    Value *StartVal = Start->codegen();
+    if (StartVal == 0) return 0;
+
+    Function *TheFunction = Builder.GetInsertBlock()->getParent();
+    BasicBlock *PreheaderBB = Builder.GetInsertBlock();
+    BasicBlock *LoopBB = BasicBlock::Create(Context, "loop", TheFunction);
+
+    Builder.CreateBr(LoopBB);
+
+    Builder.SetInsertPoint(LoopBB);
+
+    PHINode *Variable = Builder.CreatePHI(Type::getInt64Ty(Context), 2, VarName.c_str());
+    Variable->addIncoming(StartVal, PreheaderBB);
+
+    Value *OldVal = NamedValues[VarName];
+    NamedValues[VarName] = Variable;
+
+    if (Body->codegen() == 0)
+        return 0;
+
+    Value *StepVal;
+    if (Step) {
+        StepVal = Step->codegen();
+        if (StepVal == 0) return 0;
+    } else {
+        StepVal = ConstantInt::get(Context, APInt(64, 1));
+    }
+
+    Value *NextVar = Builder.CreateAdd(Variable, StepVal, "nextvar");
+
+    Value *EndCond = End->codegen();
+    if (EndCond == 0) return EndCond;
+
+    //EndCond = Builder.CreateFCmpONE(EndCond, ConstantInt::get(Context, APInt(64, 0)), "loopcond");
+    EndCond = Builder.CreateICmpNE(EndCond, ConstantInt::get(Context, APInt(64, 0)), "loopcond");
+
+    BasicBlock *LoopEndBB = Builder.GetInsertBlock();
+    BasicBlock *AfterBB = BasicBlock::Create(Context, "afterloop", TheFunction);
+
+    Builder.CreateCondBr(EndCond, LoopBB, AfterBB);
+
+    Builder.SetInsertPoint(AfterBB);
+
+    Variable->addIncoming(NextVar, LoopEndBB);
+
+    if (OldVal)
+        NamedValues[VarName] = OldVal;
+    else
+        NamedValues.erase(VarName);
+
+    return Constant::getNullValue(Type::getInt64Ty(Context));
+}
+        
+
+
 //===----------------------------------------------------------------------===//
 // MC コンパイラエントリーポイント
 // mc.cppでMainLoop()が呼ばれます。MainLoopは各top level expressionに対して
