@@ -153,7 +153,7 @@ static std::map<char, int> BinopPrecedence;
 // GetTokPrecedence - 二項演算子の結合度を取得
 // もし現在のトークンが二項演算子ならその結合度を返し、そうでないなら-1を返す。
 static int GetTokPrecedence() {
-    if (!isascii(CurTok) && CurTok != tok_sle && CurTok != tok_sge)
+    if (!isascii(CurTok) && CurTok != tok_sle && CurTok != tok_sge && CurTok != tok_eq)
         return -1;
 
 
@@ -347,7 +347,7 @@ static std::unique_ptr<ExprAST> ParseForExpr() {
     auto End = ParseExpression();
     if (End == 0) return 0;
 
-    std::unique_ptr<ExprAST> Step = 0;
+    std::unique_ptr<ExprAST> Step;
     if (CurTok == ',') {
         getNextToken();
         Step = std::move(ParseExpression());

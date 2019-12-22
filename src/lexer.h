@@ -18,10 +18,11 @@ enum Token {
     tok_else = -7,
     tok_sle = -8,
     tok_sge = -9,
-    tok_ternary = -10,
-    tok_extern = -11,
-    tok_for = -12,
-    tok_in = -13,
+    tok_eq = -10,
+    tok_ternary = -11,
+    tok_extern = -12,
+    tok_for = -13,
+    tok_in = -14,
 };
 
 class Lexer {
@@ -47,8 +48,6 @@ class Lexer {
                 identifierStr = lastChar;
                 while (isalnum((lastChar = getNextChar(iFile))))
                     identifierStr += lastChar;
-                    
-
 
                 if (identifierStr == "def")
                     return tok_def;
@@ -117,7 +116,7 @@ class Lexer {
             if (iFile.eof())
                 return tok_eof;
 
-            if (lastChar == '>' || lastChar == '<') {
+            if (lastChar == '>' || lastChar == '<' || lastChar == '=') {
                 tmpChar = lastChar;
                 if (lastChar == '>') {
                     lastChar = getNextChar(iFile);
@@ -133,6 +132,14 @@ class Lexer {
                         tmpChar = tok_eof;
                         lastChar = getNextChar(iFile);
                         return tok_sle;
+                    }
+                }
+                if (lastChar == '=') {
+                    lastChar = getNextChar(iFile);
+                    if (lastChar == '=') {
+                        tmpChar = tok_eof;
+                        lastChar = getNextChar(iFile);
+                        return tok_eq;
                     }
                 }
                 int tmp = lastChar;

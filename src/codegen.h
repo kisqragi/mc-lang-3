@@ -101,9 +101,9 @@ Value *BinaryAST::codegen() {
             L = Builder.CreateICmp(llvm::CmpInst::ICMP_SLT, L, R, "slttmp");
             return Builder.CreateIntCast(L, Builder.getInt64Ty(), true, "cast_i1_to_i64");
         case '>':
-            L = Builder.CreateICmp(llvm::CmpInst::ICMP_SGT, L, R, "slttmp");
+            L = Builder.CreateICmp(llvm::CmpInst::ICMP_SGT, L, R, "sgttmp");
             return Builder.CreateIntCast(L, Builder.getInt64Ty(), true, "cast_i1_to_i64");
-        case '=':
+        case tok_eq:
             L = Builder.CreateICmp(llvm::CmpInst::ICMP_EQ, L, R, "eqtmp");
             return Builder.CreateIntCast(L, Builder.getInt64Ty(), true, "cast_i1_to_i64");
         case tok_sle:
