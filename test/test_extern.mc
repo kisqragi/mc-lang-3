@@ -1,5 +1,4 @@
-extern printdln(x)
+extern printd(x)
 
 def test(x)
-    printdln(x)
-    printdln(x)
+    printd(x)
