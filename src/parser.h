@@ -89,11 +89,11 @@ namespace {
     // 表すクラスです。
     class FunctionAST {
         std::unique_ptr<PrototypeAST> proto;
-        std::unique_ptr<ExprAST> body;
+        std::vector<std::unique_ptr<ExprAST>> body;
 
         public:
         FunctionAST(std::unique_ptr<PrototypeAST> proto,
-                std::unique_ptr<ExprAST> body)
+                std::vector<std::unique_ptr<ExprAST>> body)
             : proto(std::move(proto)), body(std::move(body)) {}
 
         Function *codegen();
@@ -471,10 +471,23 @@ static std::unique_ptr<FunctionAST> ParseDefinition() {
     if (!proto)
         return nullptr;
 
-    if (auto E = ParseExpression())
-        return llvm::make_unique<FunctionAST>(std::move(proto), std::move(E));
+    std::vector<std::unique_ptr<ExprAST>> body;
+    if (CurTok == '{') {
+        getNextToken();
+        if (auto E = ParseExpression()) {
+                body.push_back(std::move(E));
+            while (CurTok != '}') {
+                auto e = ParseExpression();
+                body.push_back(std::move(e));
+            }
+            getNextToken();
+            return llvm::make_unique<FunctionAST>(std::move(proto), std::move(body));
+        }
+        return nullptr;
+    }
     return nullptr;
 }
+
 
 static std::unique_ptr<PrototypeAST> ParseExtern() {
     getNextToken();
@@ -494,10 +507,13 @@ static std::unique_ptr<ExprAST> ParseExpression() {
 // パーサーのトップレベル関数。まだ関数定義は実装しないので、今のmc言語では
 // __anon_exprという関数がトップレベルに作られ、その中に全てのASTが入る。
 static std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
+
     if (auto E = ParseExpression()) {
         auto Proto = llvm::make_unique<PrototypeAST>("__anon_expr",
                 std::vector<std::string>());
-        return llvm::make_unique<FunctionAST>(std::move(Proto), std::move(E));
+        std::vector<std::unique_ptr<ExprAST>> body;
+        body.push_back(std::move(E));
+        return llvm::make_unique<FunctionAST>(std::move(Proto), std::move(body));
     }
-    return nullptr;
+   return nullptr;
 }

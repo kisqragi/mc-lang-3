@@ -7,12 +7,7 @@
 #include <iostream>
 
 extern "C" DLLEXPORT int printd(int x) {
-    fprintf(stderr, "%d", x);
-    return 0;
-}
-
-extern "C" DLLEXPORT int printcleand(int x) {
-    fprintf(stderr, "%3d", x);
+    fprintf(stderr, "%d ", x);
     return 0;
 }
 

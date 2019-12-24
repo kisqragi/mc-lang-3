@@ -152,9 +152,16 @@ Function *FunctionAST::codegen() {
     NamedValues.clear();
     for (auto &Arg : function->args())
         NamedValues[Arg.getName()] = &Arg;
+    
 
+    Value *RetVal;
     // 関数のbody(ExprASTから継承されたNumberASTかBinaryAST)をcodegenする
-    if (Value *RetVal = body->codegen()) {
+    if ((RetVal = body[0]->codegen())) {
+
+        for (int i = 1; i < body.size(); i++) {
+            RetVal = body[i]->codegen();
+        }
+
         // returnのIRを作る
         Builder.CreateRet(RetVal);
 

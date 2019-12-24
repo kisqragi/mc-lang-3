@@ -5,6 +5,7 @@ extern "C" {
     int f(int);
     int myfunc(int, int);
     int test(int);
+    int test1();
     int testloop();
 }
 
@@ -31,16 +32,8 @@ int main() {
 
     //std::cout << "Call testloop with : " << testloop() << std::endl;
 
-    /*
-    test_eq 
-    if x == 1 then
-        1
-    else
-        0
-    */
-    std::cout << "Call test with (0): " << test(0) << std::endl;
-    std::cout << "Call test with (1): " << test(1) << std::endl;
-    std::cout << "Call test with (2): " << test(2) << std::endl;
+    // block test
+    test1();
 
     return 0;
 }
