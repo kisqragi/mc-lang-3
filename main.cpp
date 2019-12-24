@@ -4,7 +4,8 @@ extern "C" {
     int fib(int);
     int f(int);
     int myfunc(int, int);
-    int test(int);
+    //int test(int);
+    int test();
     int testloop();
 }
 
@@ -38,9 +39,15 @@ int main() {
     else
         0
     */
+
+    /*
     std::cout << "Call test with (0): " << test(0) << std::endl;
     std::cout << "Call test with (1): " << test(1) << std::endl;
     std::cout << "Call test with (2): " << test(2) << std::endl;
+    */
+
+    
+    std::cout << "Call test with : " << test() << std::endl;
 
     return 0;
 }

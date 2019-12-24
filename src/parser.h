@@ -57,6 +57,7 @@ namespace {
         public:
         VariableExprAST(const std::string &variableName) : variableName(variableName) {}
         Value *codegen() override;
+        const std::string &getName() const { return variableName; }
     };
 
     // CallExprAST - 関数呼び出しを表すクラス
@@ -132,7 +133,19 @@ namespace {
         Value *codegen() override;
     };
 
-} // end anonymous namespace
+    class VarExprAST : public ExprAST {
+        std::vector<std::pair<std::string, std::unique_ptr<ExprAST>>> VarNames;
+        std::unique_ptr<ExprAST> Body;
+
+    public:
+        VarExprAST(std::vector<std::pair<std::string, std::unique_ptr<ExprAST>>> VarNames,
+        std::unique_ptr<ExprAST> Body) : VarNames(std::move(VarNames)), Body(std::move(Body)) {}
+
+        Value *codegen() override;
+    };
+
+}
+// end anonymous namespace
 
 //===----------------------------------------------------------------------===//
 // Parser
@@ -364,6 +377,49 @@ static std::unique_ptr<ExprAST> ParseForExpr() {
     return llvm::make_unique<ForExprAST>(IdName, std::move(Start), std::move(End), std::move(Step), std::move(Body));
 }
         
+static std::unique_ptr<ExprAST> ParseVarExpr() {
+    getNextToken();
+    
+    std::vector<std::pair<std::string, std::unique_ptr<ExprAST>>> VarNames;
+
+    if (CurTok != tok_identifier)
+        return LogError("expected identifier after var");
+
+    while (true) {
+        std::string Name = lexer.getIdentifier();
+        getNextToken();
+
+        std::unique_ptr<ExprAST> Init = nullptr;
+
+        if (CurTok == '=') {
+            getNextToken();
+
+            Init = ParseExpression();
+            if (!Init)
+                return nullptr;
+        }
+
+        VarNames.push_back(std::make_pair(Name, std::move(Init)));
+
+        if (CurTok != ',')
+            break;
+        getNextToken();
+
+        if (CurTok != tok_identifier)
+            return LogError("expected identifier list after val");
+    }
+
+    if (CurTok != tok_in)
+        return LogError("expected 'in' keyword after 'val'");
+
+    getNextToken();
+
+    auto Body = ParseExpression();
+    if (!Body)
+        return nullptr;
+
+    return llvm::make_unique<VarExprAST>(std::move(VarNames), std::move(Body));
+}
 
 
 // ParsePrimary - NumberASTか括弧をパースする関数
@@ -383,6 +439,8 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
             return ParseIfExpr();
         case tok_for:
             return ParseForExpr();
+        case tok_var:
+            return ParseVarExpr();
     }
 }
 
