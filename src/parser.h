@@ -132,6 +132,17 @@ namespace {
         Value *codegen() override;
     };
 
+    class BlockAST : public ExprAST {
+        std::vector<std::unique_ptr<ExprAST>> body;
+
+        public:
+        BlockAST(std::vector<std::unique_ptr<ExprAST>> body) : body(std::move(body)) {}
+
+        Value *codegen() override;
+    };
+
+
+
 } // end anonymous namespace
 
 //===----------------------------------------------------------------------===//
@@ -364,7 +375,30 @@ static std::unique_ptr<ExprAST> ParseForExpr() {
     return llvm::make_unique<ForExprAST>(IdName, std::move(Start), std::move(End), std::move(Step), std::move(Body));
 }
         
-
+static std::unique_ptr<ExprAST> ParseBlock() {
+ 
+    std::vector<std::unique_ptr<ExprAST>> body;
+    if (CurTok == '{') {
+        getNextToken();
+        if (auto E = ParseExpression()) {
+            body.push_back(std::move(E));
+            while (CurTok != '}') {
+                auto e = ParseExpression();
+                body.push_back(std::move(e));
+            }
+        } else {
+            return nullptr;
+        }
+    } else {
+        if (auto E = ParseExpression()) {
+            body.push_back(std::move(E));
+        } else {
+            return nullptr;
+        }
+    }
+    getNextToken();
+    return llvm::make_unique<BlockAST>(std::move(body));
+}
 
 // ParsePrimary - NumberASTか括弧をパースする関数
 static std::unique_ptr<ExprAST> ParsePrimary() {
@@ -471,7 +505,7 @@ static std::unique_ptr<FunctionAST> ParseDefinition() {
     if (!proto)
         return nullptr;
 
-    if (auto E = ParseExpression())
+    if (auto E = ParseBlock())
         return llvm::make_unique<FunctionAST>(std::move(proto), std::move(E));
     return nullptr;
 }

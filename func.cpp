@@ -11,7 +11,7 @@ extern "C" DLLEXPORT int printd(int x) {
     return 0;
 }
 
-extern "C" DLLEXPORT int printcleand(int x) {
+extern "C" DLLEXPORT int printdclean(int x) {
     fprintf(stderr, "%3d", x);
     return 0;
 }

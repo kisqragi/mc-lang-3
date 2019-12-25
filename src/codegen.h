@@ -358,7 +358,22 @@ Value *ForExprAST::codegen() {
     return Constant::getNullValue(Type::getInt64Ty(Context));
 }
         
+Value *BlockAST::codegen() {
+    
+    Value *RetVal;
+    // 関数のbody(ExprASTから継承されたNumberASTかBinaryAST)をcodegenする
+    if ((RetVal = body[0]->codegen())) {
 
+        for (int i = 1; i < body.size(); i++) {
+            RetVal = body[i]->codegen();
+        }
+
+        // returnのIRを作る
+        return RetVal;
+    }
+
+    return nullptr;
+}
 
 //===----------------------------------------------------------------------===//
 // MC コンパイラエントリーポイント
