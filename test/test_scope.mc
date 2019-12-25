@@ -7,6 +7,6 @@ def test1() {
         printdln(i)
 }
 
-def test2()
+def test2() {
     printdln(1)
-    
+}

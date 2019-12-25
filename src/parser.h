@@ -382,9 +382,12 @@ static std::unique_ptr<ExprAST> ParseBlock() {
         getNextToken();
         if (auto E = ParseExpression()) {
             body.push_back(std::move(E));
-            while (CurTok != '}') {
+            while (CurTok != '}' && CurTok != tok_eof) {
                 auto e = ParseExpression();
                 body.push_back(std::move(e));
+            }
+            if (CurTok == tok_eof) {
+                return LogError("expected '}'");
             }
         } else {
             return nullptr;
