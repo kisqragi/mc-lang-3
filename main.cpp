@@ -8,6 +8,7 @@ extern "C" {
     int test1();
     int test2();
     int testloop();
+    int testbr(int);
 }
 
 int main() {
@@ -31,7 +32,7 @@ int main() {
     // extern test
     //test(10);
 
-    //std::cout << "Call testloop with : " << testloop() << std::endl;
+    testloop();
 
     /*
     test_eq 
@@ -47,8 +48,16 @@ int main() {
     std::cout << "Call test with (2): " << test(2) << std::endl;
     */
     
+    /*
     test1();
     test2();
+    */
+
+    /*
+    testbr(0);
+    testbr(1);
+    testbr(2);
+    */
 
     return 0;
 }

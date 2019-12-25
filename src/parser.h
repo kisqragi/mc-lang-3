@@ -349,20 +349,20 @@ static std::unique_ptr<ExprAST> ParseForExpr() {
     getNextToken();
 
     auto Start = ParseExpression();
-    if (Start == 0) return 0;
+    if (!Start) return nullptr;
 
     if (CurTok != ',')
         return LogError("expected ',' after for start value");
     getNextToken();
         
     auto End = ParseExpression();
-    if (End == 0) return 0;
+    if (!End) return nullptr;
 
     std::unique_ptr<ExprAST> Step;
     if (CurTok == ',') {
         getNextToken();
         Step = std::move(ParseExpression());
-        if (Step == 0) return 0;
+        if (!Step) return nullptr;
     }
 
     if (CurTok != tok_in)
@@ -370,7 +370,7 @@ static std::unique_ptr<ExprAST> ParseForExpr() {
     getNextToken();
 
     auto Body = ParseExpression();
-    if (Body == 0) return 0;
+    if (!Body) return nullptr;
 
     return llvm::make_unique<ForExprAST>(IdName, std::move(Start), std::move(End), std::move(Step), std::move(Body));
 }
@@ -389,6 +389,7 @@ static std::unique_ptr<ExprAST> ParseBlock() {
             if (CurTok == tok_eof) {
                 return LogError("expected '}'");
             }
+            getNextToken();
         } else {
             return nullptr;
         }
@@ -399,7 +400,6 @@ static std::unique_ptr<ExprAST> ParseBlock() {
             return nullptr;
         }
     }
-    getNextToken();
     return llvm::make_unique<BlockAST>(std::move(body));
 }
 
@@ -414,6 +414,8 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
             return ParseNumberExpr();
         case '(':
             return ParseParenExpr();
+        case '{':
+            return ParseBlock();
         case '-':
             return ParseNegNumberExpr();
         case tok_if:
@@ -508,7 +510,7 @@ static std::unique_ptr<FunctionAST> ParseDefinition() {
     if (!proto)
         return nullptr;
 
-    if (auto E = ParseBlock())
+    if (auto E = ParseExpression())
         return llvm::make_unique<FunctionAST>(std::move(proto), std::move(E));
     return nullptr;
 }
